@@ -1,4 +1,5 @@
-# Resultados do IDEB de 2023 segundo sua d espacial.
+# Resultados do IDEB de 2023 segundo sua dispersão espacial.
+
 Este projeto foi criado com a intenção de apresentar os resultados do IDEB,  tanto para as turmas dos anos iniciais quanto para as turmas dos anos finais do ensino fundamental. Os resutlados são apresentados de acordo com a sua localização geográfica. 
 É interessante observar os resultados do IDEB e como estão distribuídos espacialmente. 
 Neste projeto, foi criada uma variável categória que corresponde as diversas faixas de resultado do IDEB. 
