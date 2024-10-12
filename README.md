@@ -1,6 +1,6 @@
 # Resultados do IDEB de 2023 segundo sua dispersão espacial.
 
-Este projeto foi criado com a intenção de apresentar os resultados do IDEB, tanto para as turmas dos anos iniciais quanto para as turmas dos anos finais do ensino fundamental. Os resutlados são apresentados de acordo com a sua localização geográfica em dois mapas distintos. No primeiro mapa são apresentados os resultados do IDEB para as turmas dos anos iniciais. No segundo mapa são apresentados os resultados do IDEB para as turmas dos anos finais.
+Este projeto foi criado com a intenção de apresentar os resultados do IDEB, tanto para as turmas dos anos iniciais quanto para as turmas dos anos finais do ensino fundamental. Os resutlados são apresentados de acordo com a sua localização geográfica em dois mapas distintos. No primeiro mapa são apresentados os resultados do IDEB para as turmas dos anos iniciais. No segundo mapa são apresentados os resultados do IDEB para as turmas dos anos finais. Para selecionar as faixas do IDEB, basca clocar no botão localizado no canto superior direito da página.
 
 Neste projeto, foi criada uma variável categória que corresponde as diversas faixas de resultado do IDEB. Por exemplo, ao selecionar a faixa IDEB>=9, são apresentados no mapa os municípios que conseguiram obter um resultado do IDEB maior ou igual a 9; ao selecionar a faixa 7<=IDEB<8, são apresentados no mapa os municípios que conseguiram obter um resultado do IDEB maior ou igual a 7 e menor do que 8. A mesma lógica se aplica às outras faixas.
 
