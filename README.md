@@ -12,3 +12,5 @@ O caso do município de Sobral, município localizado no interior do Ceará, a 2
 
 Estes são apenas alguns exemplos das políticas adotadas no município que seriam exemplos a serem seguidos. 
 
+O resultado do código pode ser visto na seguinte página:
+<https://osvaldoquintellajr.github.io/Mapa-interativo-com-os-resultados-municipais-do-IDEB-2023/>
