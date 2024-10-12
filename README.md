@@ -10,5 +10,5 @@ Ao pensar em políticas públicas educacionais que busquem a melhoria deste indi
 
 O caso do município de Sobral, município localizado no interior do Ceará, a 238 km da capital, é notório e muito discutido na literatura. Uma das medidas adotadas foi o aumento do piso salarial que paga aos professores um salário maior do que o piso nacional. Houve a seleção de diretores por critérios técnicos e não políticos. Foi criado também um sistema de avaliação próprio de tal forma que os alunos de Sobral realizam duas avaliações externas por ano, além das realizadas pelo governo federal. Com esta medida, a secretaria tem maior controle sobre o desempenho dos alunos. Em conjunto com tais medidas foram criados incentivos para os professores através do pagamento de bônus com base no rendimento dos alunos e das escolas. 
 
-Estes são apenas alguns exemplos das políticas adotadas no município 
+Estes são apenas alguns exemplos das políticas adotadas no município que seriam exemplos a serem seguidos. 
 
