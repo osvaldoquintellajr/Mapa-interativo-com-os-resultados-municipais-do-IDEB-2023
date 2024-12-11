@@ -1,0 +1,211 @@
+---
+title: "Mapa interativo com os resultados municipais do IDEB 2023"
+author: "Osvaldo Martins Quintella Junior"
+date: "Last edited `r format(Sys.time(), '%d %B %Y')`"
+output:
+  html_document:
+    df_print: paged
+email_adress: osvaldoquintellajr@gmail.com
+github_repo: https://github.com/osvaldoquintellajr/Mapa-interativo-com-os-resultados-municipais-do-IDEB-2023
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(fig.align = 'center')
+options(scipen=999)
+```
+
+```{r loading packages , include = FALSE, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(leaflet)
+library(leaflet.extras)
+library(RColorBrewer)
+library(htmltools)
+```
+
+
+
+```{r read data from the computer , include = FALSE, message=FALSE, warning=FALSE}
+anexo_16261_Coordenadas_Sedes_5565_Municípios_2010 <- readxl::read_excel("~/Documentos/linkedin-publicacoes/ideb_municípios_mapa/anexo_16261_Coordenadas_Sedes_5565_Municípios_2010.xls", 
+                                                                 col_types = c("numeric", "text", "numeric", 
+                                                                               "numeric"))
+
+divulgacao_anos_iniciais_municipios_2023 <- readxl::read_excel("~/Documentos/linkedin-publicacoes/ideb_municípios_mapa/divulgacao_anos_iniciais_municipios_2023.xlsx", 
+                                                       sheet = "Folha1", col_types = c("text", 
+                                                                                       "numeric", "text", "text", "numeric", 
+                                                                                       "numeric", "numeric", "numeric", 
+                                                                                       "numeric", "numeric", "numeric", 
+                                                                                       "numeric", "numeric", "numeric"))
+
+divulgacao_anos_finais_municipios_2023 <- readxl::read_excel("~/Documentos/linkedin-publicacoes/ideb_municípios_mapa/divulgacao_anos_finais_municipios_2023.xlsx", 
+                                                     sheet = "Folha1", col_types = c("text", 
+                                                                                     "numeric", "text", "text", "numeric", 
+                                                                                     "numeric", "numeric", "numeric", 
+                                                                                     "numeric", "numeric", "numeric", 
+                                                                                     "numeric", "numeric", "numeric"))
+
+#Organizando os dados
+
+my.data.anos.iniciais <- anexo_16261_Coordenadas_Sedes_5565_Municípios_2010 %>%
+  inner_join(divulgacao_anos_iniciais_municipios_2023, by = c("GEOCODIGO_MUNICIPIO" = "Codigo_municipio")) %>%
+  select(LONGITUDE, LATITUDE, GEOCODIGO_MUNICIPIO, NOME_MUNICIPIO, Sigla_UF,
+         IDEBiniciais_2023) %>% drop_na() %>% 
+  mutate(Faixa_Ideb = as_factor(if_else(IDEBiniciais_2023 < 3,"IDEB<3",
+                                        if_else(IDEBiniciais_2023 >= 3 & IDEBiniciais_2023 < 4,"3<=IDEB<4",
+                                                if_else(IDEBiniciais_2023 >= 4 & IDEBiniciais_2023 < 5, "4<=IDEB<5",
+                                                        if_else(IDEBiniciais_2023 >= 5 & IDEBiniciais_2023 < 6, "5<=IDEB<6",
+                                                                if_else(IDEBiniciais_2023 >= 6 & IDEBiniciais_2023 < 7, "6<=IDEB<7", 
+                                                                        if_else(IDEBiniciais_2023 >= 7 & IDEBiniciais_2023 < 8, "7<=IDEB<8",
+                                                                                if_else(IDEBiniciais_2023 >= 8 & IDEBiniciais_2023 < 9, "8<=IDEB<9",
+                                                                                        if_else(IDEBiniciais_2023 >= 9 , "IDEB>=9", NA)))))))))) %>%
+  mutate(municipio = str_to_title(NOME_MUNICIPIO))
+
+
+
+
+my.data.anos.finais <- anexo_16261_Coordenadas_Sedes_5565_Municípios_2010 %>%
+  inner_join(divulgacao_anos_finais_municipios_2023, by = c("GEOCODIGO_MUNICIPIO" = "Codigo_municipio")) %>%
+  select(LONGITUDE, LATITUDE, GEOCODIGO_MUNICIPIO, NOME_MUNICIPIO, Sigla_UF, 
+         IDEBfinais_2023) %>% drop_na() %>%
+  mutate(Faixa_Ideb = as_factor(if_else(IDEBfinais_2023 < 3,"IDEB<3",
+                                        if_else(IDEBfinais_2023 >= 3 & IDEBfinais_2023 < 4,"3<=IDEB<4",
+                                                if_else(IDEBfinais_2023 >= 4 & IDEBfinais_2023 < 5, "4<=IDEB<5",
+                                                        if_else(IDEBfinais_2023 >= 5 & IDEBfinais_2023 < 6, "5<=IDEB<6",
+                                                                if_else(IDEBfinais_2023 >= 6 & IDEBfinais_2023 < 7, "6<=IDEB<7", 
+                                                                        if_else(IDEBfinais_2023 >= 7 & IDEBfinais_2023 < 8, "7<=IDEB<8",
+                                                                                if_else(IDEBfinais_2023 >= 8 & IDEBfinais_2023 < 9, "8<=IDEB<9",
+                                                                                        if_else(IDEBfinais_2023 >= 9 , "IDEB>=9", NA)))))))))) %>%
+  mutate(municipio = str_to_title(NOME_MUNICIPIO))
+```
+
+
+```{r definindo o conjunto de cores,include=FALSE, echo=FALSE}
+pal <- colorFactor(palette = c("#a50f15", "#de2d26", "#a63603", "#c51b8a", "#54278f", "#756bb1", "#3182bd", "#2ca25f"), 
+                   levels = c("IDEB<3", "3<=IDEB<4", "4<=IDEB<5", "5<=IDEB<6", "6<=IDEB<7", "7<=IDEB<8", "8<=IDEB<9", "IDEB>=9"))
+```
+
+
+#### **Mapa interativo com os resultados municipais do IDEB 2023 para as turmas dos anos iniciais.**
+
+
+```{r Criando o Mapa para as turmas dos anos iniciais, include=FALSE}
+IDEB3.iniciais <- my.data.anos.iniciais %>% filter(Faixa_Ideb == "IDEB<3")
+ 
+my.map.anos.iniciais <- leaflet(options = leafletOptions(dragging = TRUE, minZoom = 0, maxZoom = 18)) %>% 
+   addTiles() %>% 
+   setView(lng = -55.86182671411409, lat = -15.245417555282955, zoom = 4.4) %>%
+   setMaxBounds(lng1 = -28.83, lng2 = -79.89, lat1 = 8.49, lat2 = -36.39) %>%
+   addCircleMarkers(data = IDEB3.iniciais, radius = 2 , color = ~pal(Faixa_Ideb), popup = ~paste0("<b>", municipio, "</b>", "<br/>" ," ", IDEBiniciais_2023) , group = "IDEB<3")
+
+IDEB4.iniciais <- my.data.anos.iniciais %>% filter(Faixa_Ideb == "3<=IDEB<4")
+
+my.map.anos.iniciais <-  my.map.anos.iniciais %>% 
+  addCircleMarkers(data = IDEB4.iniciais, radius = 2, color = ~pal(Faixa_Ideb),  popup = ~paste0("<b>", municipio, "</b>", "<br/>" ," ", IDEBiniciais_2023) , group = "3<=IDEB<4") %>%
+  addLayersControl(overlayGroups = c("IDEB<3", "3<=IDEB<4"))
+
+IDEB5.iniciais <- my.data.anos.iniciais %>% filter(Faixa_Ideb == "4<=IDEB<5")
+
+my.map.anos.iniciais <-  my.map.anos.iniciais %>% 
+  addCircleMarkers(data = IDEB5.iniciais, radius = 2, color = ~pal(Faixa_Ideb),  popup = ~paste0("<b>",municipio, "</b>", "<br/>" ," ", IDEBiniciais_2023), group = "4<=IDEB<5") %>%
+  addLayersControl(overlayGroups = c("IDEB<3", "3<=IDEB<4", "4<=IDEB<5"))
+  
+IDEB6.iniciais <- my.data.anos.iniciais %>% filter(Faixa_Ideb == "5<=IDEB<6")
+
+my.ma.iniciaisp <- my.map.anos.iniciais %>%
+  addCircleMarkers(data = IDEB6.iniciais, radius = 2, color = ~pal(Faixa_Ideb),  popup = ~paste0("<b>",municipio, "</b>", "<br/>" ," ", IDEBiniciais_2023) , group = "5<=IDEB<6") %>%
+  addLayersControl(overlayGroups = c("IDEB<3", "3<=IDEB<4", "4<=IDEB<5", "5<=IDEB<6"))
+
+IDEB7.iniciais <- my.data.anos.iniciais %>% filter(Faixa_Ideb == "6<=IDEB<7")
+
+my.map.anos.iniciais <- my.map.anos.iniciais %>% 
+  addCircleMarkers(data = IDEB7.iniciais, radius = 2, color = ~pal(Faixa_Ideb),  popup = ~paste0("<b>",municipio, "</b>", "<br/>" ," ", IDEBiniciais_2023) , group = "6<=IDEB<7") %>%
+  addLayersControl(overlayGroups = c("IDEB<3", "3<=IDEB<4", "4<=IDEB<5", "5<=IDEB<6", "6<=IDEB<7"))
+
+IDEB8.iniciais <- my.data.anos.iniciais %>% filter(Faixa_Ideb == "7<=IDEB<8")
+
+my.map.anos.iniciais <- my.map.anos.iniciais %>% 
+  addCircleMarkers(data = IDEB8.iniciais, radius = 2, color = ~pal(Faixa_Ideb), popup = ~paste0("<b>",municipio, "</b>", "<br/>" ," ", IDEBiniciais_2023), group = "7<=IDEB<8") %>%
+  addLayersControl(overlayGroups = c("IDEB<3", "3<=IDEB<4", "4<=IDEB<5", "5<=IDEB<6", "6<=IDEB<7", "7<=IDEB<8"))
+
+IDEB9.iniciais <- my.data.anos.iniciais %>% filter(Faixa_Ideb == "8<=IDEB<9")
+
+my.map.anos.iniciais <- my.map.anos.iniciais %>% 
+  addCircleMarkers(data = IDEB9.iniciais, radius = 2,  color = ~pal(Faixa_Ideb),  popup = ~paste0("<b>",municipio, "</b>", "<br/>" ," ", IDEBiniciais_2023), group = "8<=IDEB<9") %>%
+  addLayersControl(overlayGroups = c("IDEB<3", "3<=IDEB<4", "4<=IDEB<5", "5<=IDEB<6", "6<=IDEB<7", "7<=IDEB<8", "8<=IDEB<9"))
+  
+IDEB10.iniciais <- my.data.anos.iniciais %>% filter(Faixa_Ideb == "IDEB>=9")  
+  
+my.map.anos.iniciais <- my.map.anos.iniciais %>% 
+  addCircleMarkers(data = IDEB10.iniciais,  radius = 2,  color = ~pal(Faixa_Ideb),  popup = ~paste0("<b>",municipio, "</b>", "<br/>" ," ", IDEBiniciais_2023) , group = "IDEB>=9")%>%
+  addLayersControl(overlayGroups = c("IDEB<3", "3<=IDEB<4", "4<=IDEB<5", "5<=IDEB<6", "6<=IDEB<7", "7<=IDEB<8", "8<=IDEB<9", "IDEB>=9")) 
+
+my.map.anos.iniciais <- my.map.anos.iniciais %>%
+  addLegend(pal = pal, values = c("IDEB<3", "3<=IDEB<4", "4<=IDEB<5", "5<=IDEB<6", "6<=IDEB<7", "7<=IDEB<8", "8<=IDEB<9", "IDEB>=9")) %>%
+    addResetMapButton() 
+```
+
+```{r}
+my.map.anos.iniciais
+```
+#### **Mapa interativo com os resultados municipais do IDEB 2023 para as turmas dos anos finais.**
+
+
+```{r Criando o Mapa para as turmas dos anos finais,include=FALSE, echo=FALSE}
+IDEB3.finais <- my.data.anos.finais %>% filter(Faixa_Ideb == "IDEB<3")
+
+my.map.anos.finais <- leaflet(options = leafletOptions(dragging = TRUE, minZoom = 0, maxZoom = 18)) %>% 
+  addTiles() %>% 
+  setView(lng = -55.86182671411409, lat = -15.245417555282955, zoom = 4.4) %>%
+  setMaxBounds(lng1 = -28.83, lng2 = -79.89, lat1 = 8.49, lat2 = -36.39) %>%
+  addCircleMarkers(data = IDEB3.finais, radius = 2 , color = ~pal(Faixa_Ideb), popup = ~paste0("<b>",municipio, "</b>", "<br/>" ," ", IDEBfinais_2023) , group = "IDEB<3") 
+
+IDEB4.finais <- my.data.anos.finais %>% filter(Faixa_Ideb == "3<=IDEB<4")
+
+my.map.anos.finais <-  my.map.anos.finais %>% 
+  addCircleMarkers(data = IDEB4.finais, radius = 2, color = ~pal(Faixa_Ideb), popup = ~paste0("<b>",municipio, "</b>", "<br/>" ," ", IDEBfinais_2023) , group = "3<=IDEB<4") %>%
+  addLayersControl(overlayGroups = c("IDEB<3", "3<=IDEB<4"))
+
+IDEB5.finais <- my.data.anos.finais %>% filter(Faixa_Ideb == "4<=IDEB<5")
+
+my.map.anos.finais <-  my.map.anos.finais %>% 
+  addCircleMarkers(data = IDEB5.finais, radius = 2, color = ~pal(Faixa_Ideb), popup = ~paste0("<b>",municipio, "</b>", "<br/>" ," ", IDEBfinais_2023) , group = "4<=IDEB<5") %>%
+  addLayersControl(overlayGroups = c("IDEB<3", "3<=IDEB<4", "4<=IDEB<5"))
+
+IDEB6.finais <- my.data.anos.finais %>% filter(Faixa_Ideb == "5<=IDEB<6")
+
+my.ma.finaisp <- my.map.anos.finais %>%
+  addCircleMarkers(data = IDEB6.finais, radius = 2, color = ~pal(Faixa_Ideb), popup = ~paste0("<b>",municipio, "</b>", "<br/>" ," ", IDEBfinais_2023) , group = "5<=IDEB<6") %>%
+  addLayersControl(overlayGroups = c("IDEB<3", "3<=IDEB<4", "4<=IDEB<5", "5<=IDEB<6"))
+
+IDEB7.finais <- my.data.anos.finais %>% filter(Faixa_Ideb == "6<=IDEB<7")
+
+my.map.anos.finais <- my.map.anos.finais %>% 
+  addCircleMarkers(data = IDEB7.finais, radius = 2, color = ~pal(Faixa_Ideb), popup = ~paste0("<b>",municipio, "</b>", "<br/>" ," ", IDEBfinais_2023) , group = "6<=IDEB<7") %>%
+  addLayersControl(overlayGroups = c("IDEB<3", "3<=IDEB<4", "4<=IDEB<5", "5<=IDEB<6", "6<=IDEB<7"))
+
+IDEB8.finais <- my.data.anos.finais %>% filter(Faixa_Ideb == "7<=IDEB<8")
+
+my.map.anos.finais <- my.map.anos.finais %>% 
+  addCircleMarkers(data = IDEB8.finais, radius = 2, color = ~pal(Faixa_Ideb), popup = ~paste0("<b>",municipio, "</b>", "<br/>" ," ", IDEBfinais_2023) , group = "7<=IDEB<8") %>%
+  addLayersControl(overlayGroups = c("IDEB<3", "3<=IDEB<4", "4<=IDEB<5", "5<=IDEB<6", "6<=IDEB<7", "7<=IDEB<8"))
+
+IDEB9.finais <- my.data.anos.finais %>% filter(Faixa_Ideb == "8<=IDEB<9")
+
+my.map.anos.finais <- my.map.anos.finais %>% 
+  addCircleMarkers(data = IDEB9.finais, radius = 2,  color = ~pal(Faixa_Ideb), popup = ~paste0("<b>",municipio, "</b>", "<br/>" ," ", IDEBfinais_2023) , group = "8<=IDEB<9") %>%
+  addLayersControl(overlayGroups = c("IDEB<3", "3<=IDEB<4", "4<=IDEB<5", "5<=IDEB<6", "6<=IDEB<7", "7<=IDEB<8", "8<=IDEB<9"))
+
+IDEB10.finais <- my.data.anos.finais %>% filter(Faixa_Ideb == "IDEB>=9")  
+
+my.map.anos.finais <- my.map.anos.finais %>% 
+  addCircleMarkers(data = IDEB10.finais,  radius = 2,  color = ~pal(Faixa_Ideb), popup = ~paste0("<b>",municipio, "</b>", "<br/>" ," ", IDEBfinais_2023) , group = "IDEB>=9")%>%
+  addLayersControl(overlayGroups = c("IDEB<3", "3<=IDEB<4", "4<=IDEB<5", "5<=IDEB<6", "6<=IDEB<7", "7<=IDEB<8", "8<=IDEB<9", "IDEB>=9")) 
+
+my.map.anos.finais <- my.map.anos.finais %>%
+  addLegend(pal = pal, values = c("IDEB<3", "3<=IDEB<4", "4<=IDEB<5", "5<=IDEB<6", "6<=IDEB<7", "7<=IDEB<8", "8<=IDEB<9", "IDEB>=9")) %>%
+  addResetMapButton() 
+
+```
+
+```{r}
+my.map.anos.finais
+```
